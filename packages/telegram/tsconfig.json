@@ -5,5 +5,11 @@
     "rootDir": "./src",
     "composite": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../codex-adapter" },
+    { "path": "../store" },
+    { "path": "../security" },
+    { "path": "../mobile-core" }
+  ]
 }

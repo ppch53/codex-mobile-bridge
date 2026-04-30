@@ -2,7 +2,13 @@ import { WebSocketServer as WsServer, WebSocket } from 'ws';
 import { EventRouter, CodexEvent, ApprovalEngine } from '@codex-mobile-bridge/mobile-core';
 import { AuthGuard, PolicyEngine, Redactor } from '@codex-mobile-bridge/security';
 import { LocalStore } from '@codex-mobile-bridge/store';
-import type { CodexAdapter } from '@codex-mobile-bridge/codex-adapter';
+import type { PaginatedResult, ThreadSummary, TurnSummary } from '@codex-mobile-bridge/codex-adapter';
+
+interface BridgeAdapter {
+  listThreads(options?: { limit?: number; cursor?: string }): Promise<PaginatedResult<ThreadSummary>>;
+  startTurn(threadId: string, input: string): Promise<TurnSummary>;
+  interruptTurn(threadId: string, turnId?: string): Promise<void>;
+}
 
 interface ClientInfo {
   deviceId: string;
@@ -22,7 +28,7 @@ export class WebSocketServer {
     private eventRouter: EventRouter,
     private authGuard: AuthGuard,
     private store: LocalStore,
-    private adapter: CodexAdapter,
+    private adapter: BridgeAdapter,
     private approvalEngine: ApprovalEngine,
     private policyEngine?: PolicyEngine,
     private redactor?: Redactor

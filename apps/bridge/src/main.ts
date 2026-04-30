@@ -6,8 +6,10 @@ import { CodexAdapter, APPROVAL_METHODS } from '@codex-mobile-bridge/codex-adapt
 import { EventRouter, ApprovalEngine } from '@codex-mobile-bridge/mobile-core';
 import { WebSocketServer } from './websocket/WebSocketServer';
 import { createHttpServer } from './http/server';
+import { DesktopControlAdapter } from './desktop/DesktopControlAdapter';
 import http from 'http';
 import net from 'net';
+import path from 'path';
 
 async function probeWebSocketPorts(host: string, ports: number[], timeoutMs = 300): Promise<number | null> {
   for (const port of ports) {
@@ -75,7 +77,7 @@ export async function main() {
   // Initialize Codex RPC client
   const transport = await createTransport(config);
   const rpcClient = new CodexRpcClient(transport);
-  const adapter = new CodexAdapter(rpcClient);
+  const rpcAdapter = new CodexAdapter(rpcClient);
 
   // Initialize event router and approval engine
   const eventRouter = new EventRouter();
@@ -106,32 +108,6 @@ export async function main() {
     });
   }
 
-  // --- Start local servers FIRST (independent of Codex) ---
-
-  // Start WebSocket server for web clients
-  let wsServer: WebSocketServer | null = null;
-  if (config.WEB_ENABLED) {
-    wsServer = new WebSocketServer(
-      config.WEB_PORT,
-      eventRouter,
-      authGuard,
-      store,
-      adapter,
-      approvalEngine,
-      policyEngine,
-      redactor
-    );
-    wsServer.start();
-    console.log(`  WebSocket server: ws://127.0.0.1:${config.WEB_PORT}`);
-  }
-
-  // Start HTTP server for pairing API
-  const httpApp = createHttpServer(authGuard, store, { webSocketPort: config.WEB_PORT });
-  const httpServer = http.createServer(httpApp);
-  httpServer.listen(config.HTTP_PORT, config.WEB_BIND_HOST, () => {
-    console.log(`  HTTP server: http://${config.WEB_BIND_HOST}:${config.HTTP_PORT}`);
-  });
-
   // --- Then attempt Codex connection (non-fatal if it fails) ---
 
   // Forward Codex notifications (turn/*, item/*) to EventRouter so Telegram/Web receive real-time events
@@ -161,9 +137,38 @@ export async function main() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(`  Codex app-server: OFFLINE (${msg})`);
-    console.log('  Bridge running in degraded mode. Codex features unavailable.');
-    console.log('  Start Codex Desktop/CLI and restart the bridge to connect.');
+    console.log('  Desktop control fallback: ENABLED (uses the active Codex Desktop window)');
   }
+
+  const webAdapter = codexConnected
+    ? rpcAdapter
+    : new DesktopControlAdapter(eventRouter, path.join(config.CODEX_HOME, 'state_5.sqlite'));
+
+  // --- Start local servers ---
+
+  // Start WebSocket server for web clients
+  let wsServer: WebSocketServer | null = null;
+  if (config.WEB_ENABLED) {
+    wsServer = new WebSocketServer(
+      config.WEB_PORT,
+      eventRouter,
+      authGuard,
+      store,
+      webAdapter,
+      approvalEngine,
+      policyEngine,
+      redactor
+    );
+    wsServer.start();
+    console.log(`  WebSocket server: ws://127.0.0.1:${config.WEB_PORT}`);
+  }
+
+  // Start HTTP server for pairing API
+  const httpApp = createHttpServer(authGuard, store, { webSocketPort: config.WEB_PORT });
+  const httpServer = http.createServer(httpApp);
+  httpServer.listen(config.HTTP_PORT, config.WEB_BIND_HOST, () => {
+    console.log(`  HTTP server: http://${config.WEB_BIND_HOST}:${config.HTTP_PORT}`);
+  });
 
   // Start Telegram bot if enabled
   let telegramBot: unknown = null;
@@ -172,7 +177,7 @@ export async function main() {
       const { TelegramBot } = await import('@codex-mobile-bridge/telegram');
       telegramBot = new TelegramBot(
         config.TELEGRAM_BOT_TOKEN,
-        adapter,
+        rpcAdapter,
         store,
         authGuard,
         eventRouter,

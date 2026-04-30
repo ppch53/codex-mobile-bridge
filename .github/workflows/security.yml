@@ -19,9 +19,8 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: npm audit
-        run: npm audit --audit-level=high
-        continue-on-error: true
+        run: npm audit --audit-level=high --omit=dev
       - name: Secret scan
         run: node scripts/check-secrets.js
       - name: Security regression tests
-        run: npx jest --no-cache --forceExit
+        run: npx jest --no-cache

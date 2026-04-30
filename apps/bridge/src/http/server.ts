@@ -1,8 +1,25 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { AuthGuard } from '@codex-mobile-bridge/security';
 import { LocalStore } from '@codex-mobile-bridge/store';
+
+function resolveWebDist(): string {
+  const candidates = [
+    path.join(path.dirname(process.execPath), 'web'),
+    path.resolve(process.cwd(), 'apps', 'web', 'dist'),
+    path.resolve(__dirname, '../../../web/dist'),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(path.join(candidate, 'index.html'))) {
+      return candidate;
+    }
+  }
+
+  return candidates[0];
+}
 
 export function createHttpServer(
   authGuard: AuthGuard,
@@ -13,7 +30,7 @@ export function createHttpServer(
   app.use(express.json());
 
   // Serve Web/PWA static files
-  const webDist = path.resolve(__dirname, '../../../web/dist');
+  const webDist = resolveWebDist();
   app.use(express.static(webDist));
 
   // Generate pairing code

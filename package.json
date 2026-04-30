@@ -20,10 +20,10 @@
     "test:integration": "jest --config jest.integration.config.js",
     "test:e2e:mock": "jest --config jest.e2e.config.js",
     "security:scan": "npm audit --audit-level=high --omit=dev && echo Secret scan: checking source files... && node scripts/check-secrets.js",
-    "build": "tsc --build",
+    "build": "tsc --build && npm run build -w apps/web",
     "bridge:probe": "node scripts/probe-codex.js",
     "rebuild-native": "node scripts/rebuild-native.js",
-    "package:windows": "npm run rebuild-native && node scripts/bundle-deps.js && pkg apps/bridge/dist/service.js --target node20-win-x64 --output dist/codex-mobile-bridge.exe --compress GZip",
+    "package:windows": "npm run build -w apps/web && npm run rebuild-native && node scripts/bundle-deps.js && pkg apps/bridge/dist/service.js --target node20-win-x64 --output dist/codex-mobile-bridge.exe --compress GZip && node scripts/stage-web-assets.js",
     "smoke:package": "node scripts/smoke-package.js"
   },
   "pkg": {

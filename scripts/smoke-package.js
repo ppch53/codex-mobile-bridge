@@ -4,10 +4,11 @@
  * Launches dist/codex-mobile-bridge.exe with isolated temp dirs and
  * random ports, then validates:
  *   1. HTTP GET /api/status returns 200 { status: 'ok' }
- *   2. POST /api/pairing/generate returns { code, deviceId }
- *   3. POST /api/pairing/verify with { code } returns { token }
- *   4. state.db exists in BRIDGE_DATA_DIR (SQLite works)
- *   5. service-crash.log has NO ABI / dlopen errors
+ *   2. HTTP GET /index.html returns the Web/PWA shell
+ *   3. POST /api/pairing/generate returns { code, deviceId }
+ *   4. POST /api/pairing/verify with { code } returns { token }
+ *   5. state.db exists in BRIDGE_DATA_DIR (SQLite works)
+ *   6. service-crash.log has NO ABI / dlopen errors
  *
  * Exits 0 on pass, 1 on fail. No || true, no skipping checks.
  */
@@ -159,11 +160,25 @@ async function run() {
     }
   }
 
+  if (pass) {
+    // CHECK 2: /index.html
+    try {
+      const r = await httpRequest('GET', '/index.html');
+      if (r.status !== 200 || !r.raw.includes('Codex Mobile Bridge') || !r.raw.includes('/app.js')) {
+        pass = fail(`/index.html returned ${r.status}: ${r.raw.slice(0, 300)}`);
+      } else {
+        console.log('  CHECK PASS: /index.html -> Web/PWA shell');
+      }
+    } catch (err) {
+      pass = fail(`/index.html request failed: ${err.message}`);
+    }
+  }
+
   let pairingCode;
   let pairingDeviceId;
 
   if (pass) {
-    // CHECK 2: /api/pairing/generate
+    // CHECK 3: /api/pairing/generate
     try {
       const r = await httpRequest('POST', '/api/pairing/generate', {});
       if (r.status !== 200 || !r.body || !r.body.code || !r.body.deviceId) {
@@ -179,7 +194,7 @@ async function run() {
   }
 
   if (pass) {
-    // CHECK 3: /api/pairing/verify with { code }
+    // CHECK 4: /api/pairing/verify with { code }
     try {
       const r = await httpRequest('POST', '/api/pairing/verify', { code: pairingCode });
       if (r.status !== 200 || !r.body || !r.body.token) {
@@ -197,7 +212,7 @@ async function run() {
   // Kill the exe now that HTTP checks are done
   killTree();
 
-  // CHECK 4: state.db exists
+  // CHECK 5: state.db exists
   const dbPath = path.join(dataDir, 'state.db');
   if (!fs.existsSync(dbPath)) {
     pass = fail(`state.db not found at ${dbPath} — SQLite may have crashed`);
@@ -206,7 +221,7 @@ async function run() {
     console.log(`  CHECK PASS: state.db exists (${dbSize} bytes)`);
   }
 
-  // CHECK 5: crash log has NO fatal ABI errors
+  // CHECK 6: crash log has NO fatal ABI errors
   if (fs.existsSync(crashLog)) {
     const content = fs.readFileSync(crashLog, 'utf-8');
     if (/NODE_MODULE_VERSION/.test(content)) {

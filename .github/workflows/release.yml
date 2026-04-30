@@ -38,6 +38,7 @@ jobs:
           $staging = Join-Path $distDir 'staging'
           New-Item -ItemType Directory -Path $staging -Force | Out-Null
           Copy-Item "$distDir/codex-mobile-bridge.exe" $staging
+          Copy-Item "$distDir/web" (Join-Path $staging 'web') -Recurse
           Copy-Item 'scripts/install-service.ps1' $staging
           Copy-Item 'scripts/uninstall-service.ps1' $staging
           Copy-Item 'scripts/bridge-status.ps1' $staging

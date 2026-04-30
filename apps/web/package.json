@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "esbuild src/app.ts --bundle --outfile=dist/app.js --format=iife --sourcemap",
+    "build": "esbuild src/app.ts --bundle --outfile=dist/app.js --format=iife --sourcemap && node ../../scripts/copy-web-static.js",
     "dev": "esbuild src/app.ts --bundle --outfile=dist/app.js --format=iife --sourcemap --watch"
   },
   "devDependencies": {

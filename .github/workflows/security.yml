@@ -22,5 +22,7 @@ jobs:
         run: npm audit --audit-level=high --omit=dev
       - name: Secret scan
         run: node scripts/check-secrets.js
+      - name: Typecheck
+        run: npx tsc --build
       - name: Security regression tests
         run: npx jest --no-cache

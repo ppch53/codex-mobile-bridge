@@ -23,7 +23,8 @@ function resolveWebDist(): string {
 
 export function createHttpServer(
   authGuard: AuthGuard,
-  _store: LocalStore
+  _store: LocalStore,
+  options: { webSocketPort?: number } = {}
 ) {
   const app = express();
   app.use(cors());
@@ -67,6 +68,10 @@ export function createHttpServer(
   // Health check
   app.get('/api/status', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  app.get('/api/config', (req, res) => {
+    res.json({ webSocketPort: options.webSocketPort ?? 8765 });
   });
 
   return app;

@@ -34,6 +34,16 @@ describe('HTTP Server', () => {
     });
   });
 
+  describe('GET /api/config', () => {
+    it('should return web socket port', async () => {
+      app = createHttpServer(authGuard, store, { webSocketPort: 9876 });
+
+      const res = await request(app).get('/api/config');
+      expect(res.status).toBe(200);
+      expect(res.body.webSocketPort).toBe(9876);
+    });
+  });
+
   describe('POST /api/pairing/generate', () => {
     it('should return a pairing code', async () => {
       const res = await request(app).post('/api/pairing/generate');

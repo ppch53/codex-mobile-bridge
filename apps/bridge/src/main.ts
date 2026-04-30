@@ -126,7 +126,7 @@ export async function main() {
   }
 
   // Start HTTP server for pairing API
-  const httpApp = createHttpServer(authGuard, store);
+  const httpApp = createHttpServer(authGuard, store, { webSocketPort: config.WEB_PORT });
   const httpServer = http.createServer(httpApp);
   httpServer.listen(config.HTTP_PORT, config.WEB_BIND_HOST, () => {
     console.log(`  HTTP server: http://${config.WEB_BIND_HOST}:${config.HTTP_PORT}`);

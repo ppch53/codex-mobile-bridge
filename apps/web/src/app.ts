@@ -38,6 +38,17 @@ const sendBtn = $('#send-btn') as HTMLButtonElement;
 const backBtn = $('#back-btn');
 const interruptBtn = $('#interrupt-btn');
 
+async function resolveWsUrl(): Promise<string> {
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  try {
+    const res = await fetch(`${window.location.protocol}//${window.location.host}/api/config`);
+    const config = await res.json() as { webSocketPort?: number };
+    return `${protocol}//${window.location.hostname}:${config.webSocketPort || 8765}`;
+  } catch {
+    return `${protocol}//${window.location.hostname}:8765`;
+  }
+}
+
 // --- View management ---
 function showView(view: 'pairing' | 'threads' | 'detail') {
   pairingView.classList.toggle('active', view === 'pairing');
@@ -74,9 +85,7 @@ async function handlePair() {
     const { token } = await verifyRes.json() as { token: string };
 
     // Connect WebSocket with the verified token
-    const wsPort = parseInt(new URL(apiBase).port || '8765', 10) || 8765;
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.hostname}:${wsPort}`;
+    const wsUrl = await resolveWsUrl();
 
     ws = new WsClient(wsUrl);
     setupWsHandlers();
@@ -324,9 +333,7 @@ async function init() {
   const savedToken = localStorage.getItem(TOKEN_KEY);
   if (savedToken) {
     try {
-      const wsPort = parseInt(new URL(`${window.location.protocol}//${window.location.host}`).port || '8765', 10) || 8765;
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.hostname}:${wsPort}`;
+      const wsUrl = await resolveWsUrl();
       ws = new WsClient(wsUrl);
       setupWsHandlers();
       await ws.connect(savedToken);

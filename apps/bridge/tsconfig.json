@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "composite": true
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../../packages/codex-rpc" },
+    { "path": "../../packages/codex-adapter" },
+    { "path": "../../packages/mobile-core" },
+    { "path": "../../packages/security" },
+    { "path": "../../packages/store" },
+    { "path": "../../packages/telegram" }
+  ]
+}

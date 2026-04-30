@@ -1,0 +1,71 @@
+{
+  "name": "codex-mobile-bridge",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Bridge connecting Codex Desktop/CLI to mobile clients via Telegram and Web/PWA",
+  "license": "MIT",
+  "keywords": ["codex", "openai", "telegram", "bridge", "mobile", "remote"],
+  "author": "Codex Mobile Bridge Contributors",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "node apps/bridge/dist/main.js",
+    "dev:bridge": "npm run dev -w apps/bridge",
+    "dev:web": "npm run dev -w apps/web",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --build",
+    "test": "jest",
+    "test:integration": "jest --config jest.integration.config.js",
+    "test:e2e:mock": "jest --config jest.e2e.config.js",
+    "security:scan": "npm audit --audit-level=high --omit=dev && echo Secret scan: checking source files... && node scripts/check-secrets.js",
+    "build": "tsc --build",
+    "bridge:probe": "node scripts/probe-codex.js",
+    "rebuild-native": "node scripts/rebuild-native.js",
+    "package:windows": "npm run rebuild-native && node scripts/bundle-deps.js && pkg apps/bridge/dist/service.js --target node20-win-x64 --output dist/codex-mobile-bridge.exe --compress GZip",
+    "smoke:package": "node scripts/smoke-package.js"
+  },
+  "pkg": {
+    "scripts": [
+      "apps/bridge/dist/**/*.js",
+      "packages/*/dist/**/*.js"
+    ],
+    "assets": [
+      "apps/web/dist/**/*",
+      "dist/node_modules/better-sqlite3/build/Release/better_sqlite3.node"
+    ],
+    "targets": [
+      "node20-win-x64"
+    ],
+    "outputPath": "dist"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.24",
+    "@types/supertest": "^7.2.0",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "@yao-pkg/pkg": "^6.6.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "grammy": "^1.42.0",
+    "ws": "^8.20.0"
+  }
+}

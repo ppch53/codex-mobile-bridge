@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Codex Mobile Bridge</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <h1>Codex Mobile Bridge</h1>
+      <span id="status-dot" class="dot disconnected" title="Disconnected"></span>
+    </header>
+
+    <!-- Pairing View -->
+    <main id="pairing-view" class="view active">
+      <div class="card">
+        <h2>Connect to Bridge</h2>
+        <p>Enter the pairing code from your Telegram bot or CLI.</p>
+        <input type="text" id="pairing-code" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        <button id="pair-btn" class="btn primary">Pair</button>
+        <p id="pairing-error" class="error"></p>
+      </div>
+    </main>
+
+    <!-- Thread List View -->
+    <main id="thread-list-view" class="view">
+      <div id="thread-list" class="list"></div>
+      <div id="thread-list-empty" class="empty" style="display:none">No threads yet. Use the Telegram bot to create one.</div>
+    </main>
+
+    <!-- Thread Detail View -->
+    <main id="thread-detail-view" class="view">
+      <div id="thread-header" class="thread-header">
+        <button id="back-btn" class="btn icon">&larr;</button>
+        <span id="thread-title">Thread</span>
+        <button id="interrupt-btn" class="btn danger small">Interrupt</button>
+      </div>
+      <div id="messages" class="messages"></div>
+      <div id="approval-cards"></div>
+    </main>
+
+    <!-- Input Bar (shown in thread detail) -->
+    <footer id="input-bar" style="display:none">
+      <input type="text" id="message-input" placeholder="Send a message..." autocomplete="off">
+      <button id="send-btn" class="btn primary">Send</button>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

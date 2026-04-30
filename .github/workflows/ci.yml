@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node-version: ['20']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npx tsc --build
+      - run: npx eslint . --ext .ts
+      - name: Unit tests with coverage
+        run: npx jest --no-cache --coverage
+      - name: Integration tests
+        run: npx jest --config jest.integration.config.js --no-cache
+      - name: E2E tests
+        run: npx jest --config jest.e2e.config.js --no-cache

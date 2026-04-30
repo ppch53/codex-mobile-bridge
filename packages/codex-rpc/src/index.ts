@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { spawn, type ChildProcess } from 'child_process';
 
 // --- JSON-RPC types ---
 
@@ -37,7 +38,7 @@ export interface Transport {
 // --- StdioTransport ---
 
 export class StdioTransport implements Transport {
-  private proc?: import('child_process').ChildProcess;
+  private proc?: ChildProcess;
   private messageListeners: ((data: string) => void)[] = [];
   private closeListeners: (() => void)[] = [];
   private buffer = '';
@@ -45,7 +46,6 @@ export class StdioTransport implements Transport {
   constructor(private binaryPath: string, private args: string[]) {}
 
   async connect(): Promise<void> {
-    const { spawn } = await import('child_process');
     return new Promise<void>((resolve, reject) => {
       try {
         this.proc = spawn(this.binaryPath, this.args, { stdio: ['pipe', 'pipe', 'inherit'] });

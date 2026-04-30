@@ -22,11 +22,22 @@ export class PolicyEngine {
   ) {}
 
   isPathAllowed(requestPath: string): boolean {
-    const resolved = path.resolve(requestPath).toLowerCase().replace(/\\/g, '/');
+    const resolved = normalizePolicyPath(requestPath);
+    if (!resolved) {
+      return false;
+    }
+
     for (const workspace of this.allowedWorkspaces) {
-      const normalizedWorkspace = path.resolve(workspace).toLowerCase().replace(/\\/g, '/');
+      const normalizedWorkspace = normalizePolicyPath(workspace);
+      if (!normalizedWorkspace || normalizedWorkspace.kind !== resolved.kind) {
+        continue;
+      }
+
       // Exact match or under workspace boundary (must end with /)
-      if (resolved === normalizedWorkspace || resolved.startsWith(normalizedWorkspace + '/')) {
+      if (
+        resolved.path === normalizedWorkspace.path ||
+        resolved.path.startsWith(normalizedWorkspace.path + '/')
+      ) {
         return true;
       }
     }
@@ -99,4 +110,25 @@ export class PolicyEngine {
     // For now, just a placeholder
     console.warn(`[Policy Violation] ${actor} attempted ${action} on ${target}: ${reason}`);
   }
+}
+
+function normalizePolicyPath(input: string): { kind: 'win32' | 'posix'; path: string } | null {
+  if (!input || input.includes('\0')) {
+    return null;
+  }
+
+  if (/^(\\\\|\/\/)/.test(input)) {
+    return null;
+  }
+
+  if (/^[a-zA-Z]:[\\/]/.test(input)) {
+    const normalized = path.win32.resolve(input.replace(/\//g, '\\')).toLowerCase().replace(/\\/g, '/');
+    return { kind: 'win32', path: normalized };
+  }
+
+  if (input.startsWith('/')) {
+    return { kind: 'posix', path: path.posix.resolve(input) };
+  }
+
+  return null;
 }
